@@ -5,17 +5,67 @@ import org.javacord.api.event.message.MessageCreateEvent
 import java.io.File
 import java.io.InputStream
 
-fun getBotToken() : String{
-    val txtFile = "C:/Users/skale/IdeaProjects/JungerLooterBot/botToken.txt"
-    val inputStream: InputStream = File(txtFile).inputStream()
-    val inputString = inputStream.bufferedReader().use {it.readText()}
+// Enumerates different commands the bot can handle
+enum class Command(val displayName: String) {
+    PING("!ping"), PONG("!PONG");
 
-    return inputString
+    val lowerCaseDisplayName: String = displayName.lowercase()
 }
 
+
+// Function to get the bot token from a file
+fun getBotToken(): String {
+    val txtFile = "C:/Users/skale/IdeaProjects/JungerLooterBot/botToken.txt"
+    val inputStream: InputStream = File(txtFile).inputStream()
+    return inputStream.bufferedReader().use { it.readText() }
+}
+
+
+
+// Function to handle incoming messages
+fun handleMessage(event: MessageCreateEvent) {
+    val message = event.messageContent
+
+    println(message)
+
+    // Check if the message starts with "!"
+    if (message.startsWith("!")) {
+
+        // Check if the message sender is not the bot itself
+        if (!event.messageAuthor.asUser().map { it.isYourself }.orElse(false)) {
+            when (message) {
+                Command.PING.lowerCaseDisplayName -> {
+                    // Handle PING command
+                    pingCommand(event)
+                }
+                Command.PONG.lowerCaseDisplayName -> {
+                    // Handle PONG command
+                    println("Received PONG command")
+                }
+                else -> {
+                    // Handle other cases or invalid commands
+                    println("Invalid command: $message")
+                }
+            }
+        }
+    }
+}
+
+fun pingCommand(event: MessageCreateEvent){
+    event.getChannel().sendMessage("Pong")
+}
+
+// Function to set up and start listening for messages
+fun setUpBot(api: DiscordApi) {
+    // Add a listener for message creation events
+    api.addMessageCreateListener { event: MessageCreateEvent ->
+        handleMessage(event)
+    }
+}
+
+// Main function where the bot is initialized and started
 fun main() {
-
-
+    // Create a DiscordApi instance with the bot token and specified intents
     val api: DiscordApi = DiscordApiBuilder()
         .setToken(getBotToken())
         .addIntents(
@@ -25,13 +75,11 @@ fun main() {
         )
         .login().join()
 
-    api.addMessageCreateListener { event: MessageCreateEvent ->
-        if (event.messageContent.equals("!ping", ignoreCase = true)) {
-            event.channel.sendMessage("Pong!")
-        }
-    }
+    // Set up the bot to listen for messages
+    setUpBot(api)
 
+    // Print the bot invite link
     println(api.createBotInvite())
 
-    // Your bot logic goes here
+    // Additional bot logic goes here
 }
