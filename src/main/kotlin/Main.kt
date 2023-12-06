@@ -1,9 +1,12 @@
 import org.javacord.api.DiscordApi
 import org.javacord.api.DiscordApiBuilder
 import org.javacord.api.entity.intent.Intent
+import org.javacord.api.event.interaction.SlashCommandCreateEvent
 import org.javacord.api.event.message.MessageCreateEvent
+import org.javacord.api.interaction.SlashCommand
 import java.io.File
 import java.io.InputStream
+
 
 // Enumerates different commands the bot can handle
 enum class Command(val displayName: String) {
@@ -15,7 +18,7 @@ enum class Command(val displayName: String) {
 
 // Function to get the bot token from a file
 fun getBotToken(): String {
-    val txtFile = "C:/Users/skale/IdeaProjects/JungerLooterBot/botToken.txt"
+    val txtFile = "C:/Users/Schueler/IdeaProjects/JungerLooter/botToken.txt"
     val inputStream: InputStream = File(txtFile).inputStream()
     return inputStream.bufferedReader().use { it.readText() }
 }
@@ -74,9 +77,21 @@ fun main() {
             Intent.MESSAGE_CONTENT
         )
         .login().join()
+    val command = SlashCommand.with("ping", "Checks the functionality of this command")
+        .createGlobal(api)
+        .join()
+
+
 
     // Set up the bot to listen for messages
     setUpBot(api)
+
+    api.addSlashCommandCreateListener { event: SlashCommandCreateEvent ->
+        event.getInteraction()
+            .createImmediateResponder()
+            .setContent("Pong!")
+            .respond();
+    }
 
     // Print the bot invite link
     println(api.createBotInvite())
