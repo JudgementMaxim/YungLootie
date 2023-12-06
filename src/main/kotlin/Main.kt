@@ -1,3 +1,8 @@
+// Import necessary classes and packages
+
+// Import custom command classes
+import commands.MessageCommands
+import commands.SlashCommands
 import org.javacord.api.DiscordApi
 import org.javacord.api.DiscordApiBuilder
 import org.javacord.api.entity.intent.Intent
@@ -8,6 +13,10 @@ import java.io.File
 import java.io.InputStream
 
 
+// Create instances of custom command classes
+val slashCommands = SlashCommands()
+val messageCommands = MessageCommands()
+
 // Enumerates different commands the bot can handle
 enum class Command(val displayName: String) {
     PING("!ping"), PONG("!PONG");
@@ -15,49 +24,50 @@ enum class Command(val displayName: String) {
     val lowerCaseDisplayName: String = displayName.lowercase()
 }
 
-
 // Function to get the bot token from a file
 fun getBotToken(): String {
-    val txtFile = "C:/Users/Schueler/IdeaProjects/JungerLooter/botToken.txt"
+    val txtFile = "C:/Users/skale/IdeaProjects/JungerLooterBot/botToken.txt"
     val inputStream: InputStream = File(txtFile).inputStream()
     return inputStream.bufferedReader().use { it.readText() }
 }
 
-
-
 // Function to handle incoming messages
 fun handleMessage(event: MessageCreateEvent) {
+    // Get the content of the message
     val message = event.messageContent
 
+    // Print the received message
     println(message)
 
-    // Check if the message starts with "!"
-    if (message.startsWith("!")) {
-
-        // Check if the message sender is not the bot itself
-        if (!event.messageAuthor.asUser().map { it.isYourself }.orElse(false)) {
-            when (message) {
-                Command.PING.lowerCaseDisplayName -> {
-                    // Handle PING command
-                    pingCommand(event)
-                }
-                Command.PONG.lowerCaseDisplayName -> {
-                    // Handle PONG command
-                    println("Received PONG command")
-                }
-                else -> {
-                    // Handle other cases or invalid commands
-                    println("Invalid command: $message")
-                }
+    // Check if the message starts with "!" and the sender is not the bot
+    if (message.startsWith("!") && !event.messageAuthor.asUser().map { it.isYourself }.orElse(false)) {
+        // Check the type of command
+        when (message) {
+            Command.PING.lowerCaseDisplayName -> {
+                // Handle PING command
+                messageCommands.pingMessage(event)
+            }
+            Command.PONG.lowerCaseDisplayName -> {
+                // Handle PONG command
+                println("Received PONG command")
+            }
+            else -> {
+                // Handle other cases or invalid commands
+                println("Invalid command: $message")
             }
         }
     }
 }
 
-
-
-fun pingCommand(event: MessageCreateEvent){
-    event.getChannel().sendMessage("Pong")
+// Function to handle slash commands
+fun handleCommands(name: String, event: SlashCommandCreateEvent, commandId: Long) {
+    when (name) {
+        "ping" -> {
+            // Handle ping command
+            slashCommands.pingCommand(event, commandId)
+        }
+        // Add more cases for other commands if needed
+    }
 }
 
 // Function to set up and start listening for messages
@@ -79,23 +89,21 @@ fun main() {
             Intent.MESSAGE_CONTENT
         )
         .login().join()
+
+    // Create a global slash command
     val command = SlashCommand.with("ping", "Checks the functionality of this command")
         .createGlobal(api)
         .join()
 
-
-
     // Set up the bot to listen for messages
     setUpBot(api)
 
+    // Add a listener for slash command creation events
     api.addSlashCommandCreateListener { event: SlashCommandCreateEvent ->
-        val interaction = event.slashCommandInteraction
-        val commandName = interaction.commandName
-
-
+        val commandName = event.slashCommandInteraction.commandName
+        val id = event.slashCommandInteraction.id
+        handleCommands(commandName, event, id)
     }
-
-
 
     // Print the bot invite link
     println(api.createBotInvite())
