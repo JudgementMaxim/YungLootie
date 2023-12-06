@@ -54,6 +54,8 @@ fun handleMessage(event: MessageCreateEvent) {
     }
 }
 
+
+
 fun pingCommand(event: MessageCreateEvent){
     event.getChannel().sendMessage("Pong")
 }
@@ -87,11 +89,13 @@ fun main() {
     setUpBot(api)
 
     api.addSlashCommandCreateListener { event: SlashCommandCreateEvent ->
-        event.getInteraction()
-            .createImmediateResponder()
-            .setContent("Pong!")
-            .respond();
+        val interaction = event.slashCommandInteraction
+        val commandName = interaction.commandName
+
+
     }
+
+
 
     // Print the bot invite link
     println(api.createBotInvite())
