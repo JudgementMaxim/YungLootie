@@ -38,3 +38,6 @@ build/
 .DS_Store
 
 .botToken.txt
+
+src/main/kotlin/com/api/clientID.txt
+src/main/kotlin/com/api/clientSecret.txt

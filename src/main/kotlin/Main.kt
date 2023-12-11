@@ -1,12 +1,8 @@
 // Import necessary classes and packages
-
 // Import custom command classes
-
 import com.api.WoWClassicAPI
 import com.commands.MessageCommands
 import com.commands.SlashCommands
-
-
 import org.javacord.api.DiscordApi
 import org.javacord.api.DiscordApiBuilder
 import org.javacord.api.entity.intent.Intent
@@ -16,16 +12,10 @@ import org.javacord.api.interaction.SlashCommand
 import java.io.File
 import java.io.InputStream
 
-
 // Create instances of custom command classes
 val slashCommands = SlashCommands()
 val messageCommands = MessageCommands()
 val classicAPI = WoWClassicAPI()
-
-
-
-
-
 
 // Enumerates different com.commands the bot can handle
 enum class Command(val displayName: String) {
@@ -116,8 +106,6 @@ fun main() {
     }
 
     classicAPI.callAPI("us", "static-classic-us", "en_US")
-
-
 
     // Print the bot invite link
     println(api.createBotInvite())

@@ -1,5 +1,7 @@
+// Define a package for your API-related classes
 package com.api
 
+// Import necessary libraries and classes
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.github.kittinunf.fuel.core.extensions.authenticate
@@ -10,7 +12,9 @@ import com.github.kittinunf.result.Result
 import java.io.File
 import java.io.InputStream
 
+// Define a class for interacting with the WoW Classic API
 class WoWClassicAPI() {
+
     // Function to read client ID from a file
     private fun getClientID(): String {
         val txtFile = "src/main/kotlin/com/api/clientID.txt"
@@ -24,6 +28,38 @@ class WoWClassicAPI() {
         val inputStream: InputStream = File(txtFile).inputStream()
         return inputStream.bufferedReader().use { it.readText() }
     }
+
+    // Function to get the authentication token from the token endpoint
+    private fun getAuthToken(): Response<TokenResponse, String> {
+        val tokenEndpoint = "https://eu.battle.net/oauth/token"  // Update with the correct token endpoint
+
+        val (request, response, result) = tokenEndpoint.httpPost(listOf(
+            "grant_type" to "client_credentials"
+        ))
+            .authentication().basic(getClientID(), getClientSecret())
+            .responseString()
+
+        return when (result) {
+            is Result.Success -> {
+                val parser = Parser()
+                val json = parser.parse(StringBuilder(result.value)) as JsonObject
+
+                // Create a success response with the token details
+                Response.of(
+                    TokenResponse(
+                        json["access_token"].toString(),
+                        json["expires_in"].toString().toInt(),
+                        json["token_type"].toString()
+                    )
+                )
+            }
+            is Result.Failure -> {
+                // Create an error response if the token request fails
+                Response.error("Token request failed")
+            }
+        }
+    }
+
     // Function to make an API request with a namespace
     fun callApi(apiEndpoint: String, tokenType: String, token: String, namespace: String): Response<String, String> {
         // Modify the endpoint to include the namespace as a query parameter
@@ -53,40 +89,47 @@ class WoWClassicAPI() {
                 // Print API response details
                 println("API Response:")
                 println(result.value)
+
+                // Create a success response with the API response
                 Response.of(result.value)
             }
             is Result.Failure -> {
                 // Print API error details
                 println("API Error:")
                 println(response.toString())
+
+                // Create an error response with the API error details
                 Response.error(response.toString())
             }
         }
     }
 
-
-
     // Function to make an API request with client credentials and handle the response
     fun callAPI(region: String, namespace: String, locale: String) {
-        val response = getClientCredential(
-            "https://oauth.battle.net/token",
-            getClientID(),
-            getClientSecret(),
-            listOf("api1.read", "api1.write")
-        ).bind { tokenResponse ->
-            callApi(
-                "https://eu.api.blizzard.com/data/wow/playable-class/index",
-                tokenResponse.tokenType,
-                tokenResponse.token,
-                namespace
-            )
-        }
+        // Obtain the access token
+        val tokenResponse = getAuthToken()
+        if (tokenResponse is Response.Success) {
+            val accessToken = tokenResponse.value.token
+            println("Access Token: $accessToken")
 
-        // Print the response or error
-        if (response is Response.Success) {
-            println(response.value)
-        } else if (response is Response.Failure) {
-            println(response.error)
+            // Use the obtained access token in the API request
+            val response = tokenResponse.bind { token ->
+                callApi(
+                    "https://eu.api.blizzard.com/data/wow/playable-class/index",
+                    tokenResponse.value.tokenType,
+                    tokenResponse.value.token,
+                    namespace
+                )
+            }
+
+            // Print the response or error
+            if (response is Response.Success) {
+                println(response.value)
+            } else if (response is Response.Failure) {
+                println(response.error)
+            }
+        } else if (tokenResponse is Response.Failure) {
+            println("Error obtaining access token: ${tokenResponse.error}")
         }
     }
 
@@ -109,6 +152,7 @@ class WoWClassicAPI() {
                 val parser = Parser()
                 val json = parser.parse(StringBuilder(result.value)) as JsonObject
 
+                // Create a success response with the token details
                 Response.of(
                     TokenResponse(
                         json["access_token"].toString(),
@@ -118,6 +162,7 @@ class WoWClassicAPI() {
                 )
             }
             is Result.Failure -> {
+                // Create an error response if the token request fails
                 Response.error("Token request failed")
             }
         }
@@ -128,7 +173,10 @@ class WoWClassicAPI() {
 
     // Sealed class for handling API responses
     sealed class Response<out L, R> {
+        // Class representing a successful response with a value of type L
         class Success<out L, R>(val value: L) : Response<L, R>()
+
+        // Class representing a failure response with an error of type R
         class Failure<out L, R>(val error: R) : Response<L, R>()
 
         // Bind function to handle different response types
@@ -140,6 +188,7 @@ class WoWClassicAPI() {
             }
         }
 
+        // Companion object with utility functions for creating responses
         companion object {
             // Function to create a success response
             fun <L, R> of(response: L) = Success<L, R>(response)
