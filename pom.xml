@@ -27,7 +27,6 @@
 
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
-        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -93,6 +92,39 @@
             <version>3.8.0</version>
             <type>pom</type>
         </dependency>
-    </dependencies>
+        <!-- https://mvnrepository.com/artifact/io.ktor/ktor-client-apache -->
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-apache</artifactId>
+            <version>2.3.6</version>
+            <scope>runtime</scope>
+        </dependency>
 
+        <!-- https://mvnrepository.com/artifact/io.ktor/ktor-client-auth-jvm -->
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-auth-jvm</artifactId>
+            <version>2.3.6</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/io.ktor/ktor-client-json -->
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-json</artifactId>
+            <version>2.3.6</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.kittinunf.fuel/fuel -->
+        <dependency>
+            <groupId>com.github.kittinunf.fuel</groupId>
+            <artifactId>fuel</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.beust/klaxon -->
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>klaxon</artifactId>
+            <version>5.6</version>
+        </dependency>
+    </dependencies>
 </project>

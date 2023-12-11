@@ -1,8 +1,12 @@
 // Import necessary classes and packages
 
 // Import custom command classes
-import commands.MessageCommands
-import commands.SlashCommands
+
+import com.api.WoWClassicAPI
+import com.commands.MessageCommands
+import com.commands.SlashCommands
+
+
 import org.javacord.api.DiscordApi
 import org.javacord.api.DiscordApiBuilder
 import org.javacord.api.entity.intent.Intent
@@ -16,8 +20,14 @@ import java.io.InputStream
 // Create instances of custom command classes
 val slashCommands = SlashCommands()
 val messageCommands = MessageCommands()
+val classicAPI = WoWClassicAPI()
 
-// Enumerates different commands the bot can handle
+
+
+
+
+
+// Enumerates different com.commands the bot can handle
 enum class Command(val displayName: String) {
     PING("!ping"), PONG("!PONG");
 
@@ -26,7 +36,7 @@ enum class Command(val displayName: String) {
 
 // Function to get the bot token from a file
 fun getBotToken(): String {
-    val txtFile = "C:/Users/skale/IdeaProjects/JungerLooterBot/botToken.txt"
+    val txtFile = "botToken.txt"
     val inputStream: InputStream = File(txtFile).inputStream()
     return inputStream.bufferedReader().use { it.readText() }
 }
@@ -52,21 +62,21 @@ fun handleMessage(event: MessageCreateEvent) {
                 println("Received PONG command")
             }
             else -> {
-                // Handle other cases or invalid commands
+                // Handle other cases or invalid com.commands
                 println("Invalid command: $message")
             }
         }
     }
 }
 
-// Function to handle slash commands
+// Function to handle slash com.commands
 fun handleCommands(name: String, event: SlashCommandCreateEvent, commandId: Long) {
     when (name) {
         "ping" -> {
             // Handle ping command
             slashCommands.pingCommand(event, commandId)
         }
-        // Add more cases for other commands if needed
+        // Add more cases for other com.commands if needed
     }
 }
 
@@ -104,6 +114,10 @@ fun main() {
         val id = event.slashCommandInteraction.id
         handleCommands(commandName, event, id)
     }
+
+    classicAPI.callAPI("us", "static-classic-us", "en_US")
+
+
 
     // Print the bot invite link
     println(api.createBotInvite())
