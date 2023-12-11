@@ -1,16 +1,22 @@
 // Define a package for your API-related classes
+
+
 package com.api
 
 // Import necessary libraries and classes
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
-import com.github.kittinunf.fuel.core.extensions.authenticate
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.result.Result
 import java.io.File
 import java.io.InputStream
+import org.slf4j.LoggerFactory
+
+// Create a logger instance
+private val logger = LoggerFactory.getLogger(WoWClassicAPI::class.java)
+
 
 // Define a class for interacting with the WoW Classic API
 class WoWClassicAPI() {
@@ -78,25 +84,26 @@ class WoWClassicAPI() {
             .header(Pair("Authorization", "$tokenType $token"))
             .responseString()
 
-        // Print API request details
-        println("API Request Details:")
-        println("Endpoint: $modifiedEndpoint")
-        println("Headers: ${request.headers}")
-        println("Authorization: ${request.headers["Authorization"]}")
+        logger.info("API Request Details:")
+        logger.info("Method: GET")
+        logger.info("Endpoint: $modifiedEndpoint")
+        logger.info("Headers: ${request.headers}")
+        logger.info("Authorization: ${request.headers["Authorization"]}")
+        logger.info("Parameters: ${request.parameters}")
 
         return when (result) {
             is Result.Success -> {
                 // Print API response details
-                println("API Response:")
-                println(result.value)
+                logger.info("API Response:")
+                logger.info(result.value)
 
                 // Create a success response with the API response
                 Response.of(result.value)
             }
             is Result.Failure -> {
                 // Print API error details
-                println("API Error:")
-                println(response.toString())
+                logger.info("API Error:")
+                logger.info(response.toString())
 
                 // Create an error response with the API error details
                 Response.error(response.toString())
@@ -105,31 +112,36 @@ class WoWClassicAPI() {
     }
 
     // Function to make an API request with client credentials and handle the response
-    fun callAPI(region: String, namespace: String, locale: String) {
+    fun callAPI(region: String, namespace: String, locale: String, endpoint: String): Response<String, String> {
         // Obtain the access token
         val tokenResponse = getAuthToken()
-        if (tokenResponse is Response.Success) {
-            val accessToken = tokenResponse.value.token
-            println("Access Token: $accessToken")
+        return when (tokenResponse) {
+            is Response.Success -> {
+                val accessToken = tokenResponse.value.token
+                logger.info("Access Token: $accessToken")
 
-            // Use the obtained access token in the API request
-            val response = tokenResponse.bind { token ->
-                callApi(
-                    "https://eu.api.blizzard.com/data/wow/playable-class/index",
-                    tokenResponse.value.tokenType,
-                    tokenResponse.value.token,
-                    namespace
-                )
-            }
+                // Use the obtained access token in the API request
+                val response = tokenResponse.bind { token ->
+                    callApi(
+                        "https://$region.api.blizzard.com/$endpoint",
+                        tokenResponse.value.tokenType,
+                        tokenResponse.value.token,
+                        namespace
+                    )
+                }
 
-            // Print the response or error
-            if (response is Response.Success) {
-                println(response.value)
-            } else if (response is Response.Failure) {
-                println(response.error)
+                // Print the response or error
+                if (response is Response.Success) {
+                    logger.info(response.value)
+                } else if (response is Response.Failure) {
+                    logger.info(response.error)
+                }
+                response
             }
-        } else if (tokenResponse is Response.Failure) {
-            println("Error obtaining access token: ${tokenResponse.error}")
+            is Response.Failure -> {
+                logger.info("Error obtaining access token: ${tokenResponse.error}")
+                Response.error(tokenResponse.error)
+            }
         }
     }
 

@@ -11,6 +11,10 @@ import org.javacord.api.event.message.MessageCreateEvent
 import org.javacord.api.interaction.SlashCommand
 import java.io.File
 import java.io.InputStream
+import org.slf4j.LoggerFactory
+
+// Create a logger instance
+private val logger = LoggerFactory.getLogger(WoWClassicAPI::class.java)
 
 // Create instances of custom command classes
 val slashCommands = SlashCommands()
@@ -37,7 +41,7 @@ fun handleMessage(event: MessageCreateEvent) {
     val message = event.messageContent
 
     // Print the received message
-    println(message)
+    logger.info(message)
 
     // Check if the message starts with "!" and the sender is not the bot
     if (message.startsWith("!") && !event.messageAuthor.asUser().map { it.isYourself }.orElse(false)) {
@@ -49,11 +53,11 @@ fun handleMessage(event: MessageCreateEvent) {
             }
             Command.PONG.lowerCaseDisplayName -> {
                 // Handle PONG command
-                println("Received PONG command")
+                logger.info("Received PONG command")
             }
             else -> {
                 // Handle other cases or invalid com.commands
-                println("Invalid command: $message")
+                logger.info("Invalid command: $message")
             }
         }
     }
@@ -105,10 +109,10 @@ fun main() {
         handleCommands(commandName, event, id)
     }
 
-    classicAPI.callAPI("us", "static-classic-us", "en_US")
+    classicAPI.callAPI("eu", "static-classic-eu", "en_US","data/wow/playable-class/index")
 
     // Print the bot invite link
-    println(api.createBotInvite())
+    logger.info(api.createBotInvite())
 
     // Additional bot logic goes here
 }
